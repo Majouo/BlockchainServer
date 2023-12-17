@@ -12,8 +12,10 @@ public class ClientHandler extends Thread {
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
+    private Block block;
+    private boolean goldenHash;
 
-    public Block block;
+    private String goldenHashData;
 
     public ClientHandler(Socket socket,Block block)  {
         this.clientSocket = socket;
@@ -32,6 +34,9 @@ public class ClientHandler extends Thread {
                     out.println("bye");
                     break;
                 }
+                if ("g".equals(inputLine)) {
+                    goldenHash=true;
+                }
                 out.println(inputLine);
             }
 
@@ -40,8 +45,30 @@ public class ClientHandler extends Thread {
         }
         catch (Exception e){
             System.out.println(e.getMessage());
-            out.close();
+        }
+        finally {
+            if(out!=null)
+                out.close();
         }
 
+    }
+    public Block getBlock() {
+        return block;
+    }
+
+    public void setBlock(Block block) {
+        this.block = block;
+    }
+
+    public boolean isGoldenHash() {
+        return goldenHash;
+    }
+
+    public void setGoldenHash(boolean goldenHash) {
+        this.goldenHash = goldenHash;
+    }
+
+    public String getGoldenHashData(){
+        return goldenHashData;
     }
 }

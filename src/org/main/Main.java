@@ -18,16 +18,16 @@ public class Main {
     public static void main(String[] args) {
 
         int port =4000;
+        int id=0;
         ServerSocket serverSocket=null;
-        List<ClientHandler> clientHandlerList =new ArrayList<>();
-        Block block = new Block(0, "transaction", Constants.GENESIS_PREV_HASH);
+        ClientMenager clientMenager =new ClientMenager();
+        Block block = new Block(id, "transaction", Constants.GENESIS_PREV_HASH);
         try {
             serverSocket = new ServerSocket(port);
-            serverSocket.setSoTimeout(5000);
+            clientMenager.start();
             while (true)
             {
-                ClientHandler clientHandler = new ClientHandler(serverSocket.accept(),block);
-                clientHandler.start();
+                clientMenager.addClientHandler(serverSocket.accept());
             }
 
         }catch (Exception e)
