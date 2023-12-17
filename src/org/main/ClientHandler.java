@@ -4,6 +4,7 @@ import org.blockchain.Block;
 import org.blockchain.Constants;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -35,6 +36,7 @@ public class ClientHandler extends Thread {
                     break;
                 }
                 if ("g".equals(inputLine)) {
+                    goldenHashData=new Block(-1,"transaction","test").toJSON();//TODO komunikacja z klientem
                     goldenHash=true;
                 }
                 out.println(inputLine);
@@ -56,8 +58,15 @@ public class ClientHandler extends Thread {
         return block;
     }
 
-    public void setBlock(Block block) {
+    public void setBlock(Block block) throws IOException {
         this.block = block;
+        if(out!=null) {
+            out.println(block.toString());
+        }
+        else if(clientSocket!=null){
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println(block.toString());
+        }
     }
 
     public boolean isGoldenHash() {

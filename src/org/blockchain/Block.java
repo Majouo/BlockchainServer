@@ -1,5 +1,7 @@
 package org.blockchain;
 
+import com.google.gson.Gson;
+
 import java.util.Date;
 
 public class Block {
@@ -14,6 +16,10 @@ public class Block {
     private long nonce;
 
     private boolean goldenHash=false;
+
+    public Block(){
+
+    }
 
     public Block(int id, String transaction, String previousHash) {
 
@@ -92,10 +98,14 @@ public class Block {
     }
 
     @Override
-
     public String toString() {
 
         return Integer.toString(id) + previousHash + Long.toString(timeStamp) + Long.toString(nonce) + transaction.toString();
 
+    }
+
+    public String toJSON(){
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 }

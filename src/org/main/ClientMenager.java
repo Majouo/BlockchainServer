@@ -1,5 +1,6 @@
 package org.main;
 
+import com.google.gson.Gson;
 import org.blockchain.Block;
 import org.blockchain.Constants;
 
@@ -28,7 +29,12 @@ public class ClientMenager extends Thread {
                 clientHandlerList.remove(i);
                 continue;
             }
-            ch.setBlock(this.block);
+            try {
+                ch.setBlock(this.block);
+            }
+            catch (IOException e){
+                clientHandlerList.remove(i);
+            }
             i++;
         }
     }
@@ -41,7 +47,8 @@ public class ClientMenager extends Thread {
                     continue;
                 }
                 if (ch.isGoldenHash()) {
-                    this.block = new Block(id, "transaction", ch.getGoldenHashData());
+                    Gson gson = new Gson();
+                    this.block = gson.fromJson(ch.getGoldenHashData(),Block.class);
                     ch.setGoldenHash(false);
                     refreshBlock();
                     break;
