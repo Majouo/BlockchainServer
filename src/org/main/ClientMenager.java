@@ -3,6 +3,7 @@ package org.main;
 import com.google.gson.Gson;
 import org.blockchain.Block;
 import org.blockchain.Constants;
+import org.blockchain.Range;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -15,10 +16,16 @@ public class ClientMenager extends Thread {
     private Block block;
     private int id;
 
+    private long nonceRange;
+
+    private long nonce;
+
     public  ClientMenager(){
         this.clientHandlerList = new ArrayList<>();
         this.id=0;
         this.block= new Block(id, "transaction", Constants.GENESIS_PREV_HASH);
+        this.nonceRange=100000;
+        this.nonce=0;
     }
 
     private void refreshBlock()
@@ -30,6 +37,7 @@ public class ClientMenager extends Thread {
                 continue;
             }
             try {
+                ch.sendBlockChangeRequest();
                 ch.setBlock(this.block);
             }
             catch (IOException e){
@@ -40,20 +48,42 @@ public class ClientMenager extends Thread {
     }
     public void run(){
         while (true) {
-            int i = 0;
-            for (ClientHandler ch : clientHandlerList) {
-                if (!ch.isAlive()) {
-                    clientHandlerList.remove(i);
-                    continue;
+            try {
+                int i = 0;
+                for (ClientHandler ch : clientHandlerList) {
+                    if (!ch.isAlive()) {
+                        clientHandlerList.remove(i);
+                        continue;
+                    }
+                    if (ch.isGoldenHash()) {
+                        Gson gson = new Gson();
+                        Block goldenBlock = gson.fromJson(ch.getGoldenHashData(), Block.class);
+                        id++;
+                        nonce = 0;
+                        this.block = new Block(id, "transaction", goldenBlock.getHash());
+                        ch.setGoldenHash(false);
+                        refreshBlock();
+                        break;
+                    }
+                    if (ch.isNeedsRange()) {
+                        Range range = new Range(nonce, nonce + nonceRange);
+                        nonce += nonceRange;
+                        try {
+                            ch.setNeedsRange(range);
+                        } catch (IOException e) {
+                            clientHandlerList.remove(i);
+                        }
+                    }
+                    i++;
                 }
-                if (ch.isGoldenHash()) {
-                    Gson gson = new Gson();
-                    this.block = gson.fromJson(ch.getGoldenHashData(),Block.class);
-                    ch.setGoldenHash(false);
-                    refreshBlock();
-                    break;
+                try {
+                    Thread.sleep(1);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
                 }
-                i++;
+            }
+            catch (Exception e){
+                System.out.println(e.getMessage());
             }
         }
     }

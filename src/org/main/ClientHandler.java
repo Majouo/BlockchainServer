@@ -1,7 +1,9 @@
 package org.main;
 
+import com.google.gson.Gson;
 import org.blockchain.Block;
 import org.blockchain.Constants;
+import org.blockchain.Range;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,12 +17,14 @@ public class ClientHandler extends Thread {
     private BufferedReader in;
     private Block block;
     private boolean goldenHash;
-
     private String goldenHashData;
+
+    private boolean needsRange;
 
     public ClientHandler(Socket socket,Block block)  {
         this.clientSocket = socket;
         this.block=block;
+
     }
 
     public void run() {
@@ -35,11 +39,24 @@ public class ClientHandler extends Thread {
                     out.println("bye");
                     break;
                 }
-                if ("g".equals(inputLine)) {
-                    goldenHashData=new Block(-1,"transaction","test").toJSON();//TODO komunikacja z klientem
-                    goldenHash=true;
+                if("[".equals(inputLine))
+                {
+                    out.println(block.toJSON());
                 }
-                out.println(inputLine);
+                if ("]".equals(inputLine)) {
+                    out.println("]");
+                    goldenHashData=in.readLine();
+                    Gson gson = new Gson();
+                    Block goldenBlock = gson.fromJson(goldenHashData, Block.class);
+                    if(!block.notGoldenHash(goldenBlock.getHash())) {
+                        System.out.println("Goldenhash found");
+                        System.out.println(goldenBlock.toJSON());
+                        goldenHash = true;
+                    }
+                }
+                if(":".equals(inputLine)){
+                    needsRange=true;
+                }
             }
 
             in.close();
@@ -60,13 +77,6 @@ public class ClientHandler extends Thread {
 
     public void setBlock(Block block) throws IOException {
         this.block = block;
-        if(out!=null) {
-            out.println(block.toString());
-        }
-        else if(clientSocket!=null){
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            out.println(block.toString());
-        }
     }
 
     public boolean isGoldenHash() {
@@ -79,5 +89,33 @@ public class ClientHandler extends Thread {
 
     public String getGoldenHashData(){
         return goldenHashData;
+    }
+
+    public boolean isNeedsRange() {
+        return needsRange;
+    }
+
+    public void setNeedsRange(Range range) throws IOException{
+        if(out!=null) {
+            out.println(range.toJSON());
+        }
+        else if(clientSocket!=null){
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println(range.toJSON());
+        }
+        this.needsRange = false;
+    }
+
+    public void sendBlockChangeRequest() throws IOException{
+        if(out!=null) {
+            out.println("]");
+        }
+        else if(clientSocket!=null){
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println("]");
+        }
+    }
+    public void setNeedsRange(boolean needsRange) {
+        this.needsRange = needsRange;
     }
 }
