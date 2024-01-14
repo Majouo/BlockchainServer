@@ -39,12 +39,11 @@ public class ClientHandler extends Thread {
                     out.println("bye");
                     break;
                 }
-                if("[".equals(inputLine))
+                else if("[".equals(inputLine))
                 {
                     out.println(block.toJSON());
                 }
-                if ("]".equals(inputLine)) {
-                    out.println("]");
+                else if ("]".equals(inputLine)) {
                     goldenHashData=in.readLine();
                     Gson gson = new Gson();
                     Block goldenBlock = gson.fromJson(goldenHashData, Block.class);
@@ -53,8 +52,9 @@ public class ClientHandler extends Thread {
                         System.out.println(goldenBlock.toJSON());
                         goldenHash = true;
                     }
+                    out.println("]");
                 }
-                if(":".equals(inputLine)){
+                else if(":".equals(inputLine)){
                     needsRange=true;
                 }
             }
